@@ -168,6 +168,20 @@ async function apiGet<T>(apiKey: string, baseUrl: string, path: string): Promise
   }
 }
 
+/** Fetch keystats for free float data */
+export async function fetchEmitenKeystats(
+  apiKey: string,
+  baseUrl: string,
+  symbol: string,
+): Promise<{ freeFloat: string | null; shareOutstanding: string | null }> {
+  const body = await apiGet<any>(apiKey, baseUrl, `/api/emiten/${encodeURIComponent(symbol)}/keystats`);
+  const stats = body?.data?.stats;
+  return {
+    freeFloat: stats?.free_float ?? null,
+    shareOutstanding: stats?.current_share_outstanding ?? null,
+  };
+}
+
 // --- Helpers ---
 
 function handleHttpError(status: number, context: string): never {

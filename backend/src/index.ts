@@ -14,6 +14,9 @@ import { createShareholderRouter, createEmitenRouter } from './controllers/share
 import { createCorrelationRouter } from './controllers/correlation.controller.js';
 import { createGraphRouter } from './controllers/graph.controller.js';
 import { createIntelligenceRouter } from './controllers/intelligence.controller.js';
+import { createFreeFloatRouter } from './controllers/freefloat.controller.js';
+import { FreeFloatFetcher } from './core/freefloat-fetcher.js';
+import { runFreeFloatMigration } from './database/migrations.js';
 
 async function main(): Promise<void> {
   const app = express();
@@ -36,10 +39,12 @@ async function main(): Promise<void> {
   // Initialize database
   const pool = getPool();
   await runMigrations(pool);
+  await runFreeFloatMigration(pool);
 
   // Initialize core modules
   const floodController = new FloodController();
   const fetcher = new Fetcher(pool, floodController, config.datasahamApiKey);
+  const freeFloatFetcher = new FreeFloatFetcher(pool, new FloodController({ delayMs: 1500 }), config.datasahamApiKey);
 
   // Register routes
   app.use('/api', createStatusRouter(pool, fetcher, floodController));
@@ -50,6 +55,7 @@ async function main(): Promise<void> {
   app.use('/api/emitens', createEmitenRouter(pool));
   app.use('/api/graph', createGraphRouter(pool));
   app.use('/api/intelligence', createIntelligenceRouter(pool));
+  app.use('/api/freefloat', createFreeFloatRouter(pool, freeFloatFetcher));
 
   // Start server
   const server = app.listen(config.port, () => {

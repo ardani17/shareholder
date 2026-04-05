@@ -225,3 +225,28 @@ export function getAllConcentrations(sortBy?: string, order?: string, limit?: nu
     }>
   >(`/api/intelligence/concentrations${qs ? `?${qs}` : ''}`);
 }
+
+// --- Free Float ---
+
+export function startFreeFloatFetch() {
+  return request<{ message: string }>('/api/freefloat/fetch', { method: 'POST' });
+}
+
+export function getFreeFloatProgress() {
+  return request<{ fetched: number; total: number; isRunning: boolean }>('/api/freefloat/progress');
+}
+
+export function getFreeFloatData(params?: { status?: string; search?: string; sort_by?: string; order?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.status) qs.set('status', params.status);
+  if (params?.search) qs.set('search', params.search);
+  if (params?.sort_by) qs.set('sort_by', params.sort_by);
+  if (params?.order) qs.set('order', params.order);
+  const s = qs.toString();
+  return request<Array<{
+    symbol: string; emiten_name: string; free_float_pct: number | null;
+    share_outstanding: number | null; free_float_shares: number | null;
+    shareholder_count: number | null; shareholder_date: string | null;
+    board: string | null; compliance_status: string; fetched_at: string;
+  }>>(`/api/freefloat/data${s ? `?${s}` : ''}`);
+}

@@ -5,6 +5,7 @@ import ShareholderMap from './pages/ShareholderMap';
 import Correlation from './pages/Correlation';
 import NetworkGraph from './pages/NetworkGraph';
 import Intelligence from './pages/Intelligence';
+import FreeFloat from './pages/FreeFloat';
 import { getStatus } from './api/client';
 
 const SITE_PASSWORD = import.meta.env.VITE_SITE_PASSWORD || 'shareholder2026';
@@ -103,6 +104,7 @@ export default function App() {
           <Link to="/correlations" style={linkStyle}>Correlations</Link>
           <Link to="/graph" style={linkStyle}>Network Graph</Link>
           <Link to="/intelligence" style={linkStyle}>Intelligence</Link>
+        <Link to="/freefloat" style={linkStyle}>Free Float</Link>
         </nav>
         <DateBanner />
         <Routes>
@@ -111,6 +113,7 @@ export default function App() {
           <Route path="/correlations" element={<Correlation />} />
           <Route path="/graph" element={<NetworkGraph />} />
           <Route path="/intelligence" element={<Intelligence />} />
+        <Route path="/freefloat" element={<FreeFloat />} />
         </Routes>
       </BrowserRouter>
     </SiteGate>
