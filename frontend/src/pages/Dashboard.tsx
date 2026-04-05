@@ -7,6 +7,8 @@ import {
   resumeFetch,
   getFloodConfig,
   updateFloodConfig,
+  startFreeFloatFetch,
+  getFreeFloatProgress,
 } from '../api/client';
 
 interface StatusData {
@@ -85,6 +87,13 @@ export default function Dashboard() {
   });
   const [actionMsg, setActionMsg] = useState<string | null>(null);
 
+  // Free float
+  const [ffProgress, setFfProgress] = useState<{ fetched: number; total: number; isRunning: boolean } | null>(null);
+
+  const fetchFfProgress = useCallback(async () => {
+    try { setFfProgress(await getFreeFloatProgress()); } catch { /* ignore */ }
+  }, []);
+
   const fetchStatus = useCallback(async () => {
     try {
       const data = await getStatus();
@@ -124,16 +133,22 @@ export default function Dashboard() {
     fetchStatus();
     fetchProgress();
     fetchFloodConfig();
-  }, [fetchStatus, fetchProgress, fetchFloodConfig]);
+    fetchFfProgress();
+  }, [fetchStatus, fetchProgress, fetchFloodConfig, fetchFfProgress]);
 
   // Auto-refresh progress every 5 seconds when fetch is running
   useEffect(() => {
     if (!progress?.isRunning) return;
-    const interval = setInterval(() => {
-      fetchProgress();
-    }, 5000);
+    const interval = setInterval(() => { fetchProgress(); }, 5000);
     return () => clearInterval(interval);
   }, [progress?.isRunning, fetchProgress]);
+
+  // Auto-refresh free float progress
+  useEffect(() => {
+    if (!ffProgress?.isRunning) return;
+    const interval = setInterval(() => { fetchFfProgress(); }, 10000);
+    return () => clearInterval(interval);
+  }, [ffProgress?.isRunning, fetchFfProgress]);
 
   const handleStart = async () => {
     try {
@@ -174,6 +189,16 @@ export default function Dashboard() {
       setActionMsg('Config updated');
     } catch (err) {
       setActionMsg(err instanceof Error ? err.message : 'Config update failed');
+    }
+  };
+
+  const handleFfFetch = async () => {
+    try {
+      await startFreeFloatFetch();
+      setActionMsg('Free float fetch started');
+      fetchFfProgress();
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : 'Free float fetch failed');
     }
   };
 
@@ -336,6 +361,45 @@ export default function Dashboard() {
           </div>
           <button style={btnStyle} type="submit">Update Config</button>
         </form>
+      </div>
+
+      {/* Free Float Fetch */}
+      <div style={sectionStyle}>
+        <h2>Free Float Data Fetch</h2>
+        <p style={{ fontSize: 13, color: '#666', marginBottom: 12 }}>
+          Ambil data free float (% FF, jumlah saham FF, jumlah pemegang saham) dari API Datasaham untuk seluruh emiten.
+        </p>
+        {ffProgress && (
+          <div style={{ marginBottom: 12 }}>
+            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: 4 }}>Fetched</td>
+                  <td style={{ padding: 4, fontWeight: 'bold' }}>{ffProgress.fetched}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: 4 }}>Total Emiten</td>
+                  <td style={{ padding: 4, fontWeight: 'bold' }}>{ffProgress.total}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              Status:{' '}
+              {ffProgress.isRunning
+                ? <span style={{ color: 'orange', fontWeight: 'bold' }}>Running ({ffProgress.fetched}/{ffProgress.total})</span>
+                : ffProgress.fetched > 0
+                  ? <span style={{ color: 'green' }}>Complete</span>
+                  : 'Idle'}
+            </p>
+          </div>
+        )}
+        <button
+          style={{ ...btnStyle, background: ffProgress?.isRunning ? '#ffcdd2' : '#e8f5e9' }}
+          onClick={handleFfFetch}
+          disabled={ffProgress?.isRunning}
+        >
+          {ffProgress?.isRunning ? 'Fetching...' : '🔄 Start Free Float Fetch'}
+        </button>
       </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { startFreeFloatFetch, getFreeFloatProgress, getFreeFloatData } from '../api/client';
+import { getFreeFloatProgress, getFreeFloatData } from '../api/client';
 
 interface FFRow {
   symbol: string; emiten_name: string; free_float_pct: number | null;
@@ -60,10 +60,6 @@ export default function FreeFloat() {
     return () => clearInterval(iv);
   }, [progress?.isRunning]); // eslint-disable-line
 
-  const handleFetch = async () => {
-    try { await startFreeFloatFetch(); loadProgress(); } catch { /* ignore */ }
-  };
-
   const toggleSort = (col: string) => {
     if (sortBy === col) setOrder(o => o === 'asc' ? 'desc' : 'asc');
     else { setSortBy(col); setOrder('asc'); }
@@ -79,10 +75,11 @@ export default function FreeFloat() {
 
       {/* Controls */}
       <div style={{ ...box, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button style={{ ...btn, background: progress?.isRunning ? '#ffcdd2' : '#e8f5e9' }} onClick={handleFetch} disabled={progress?.isRunning}>
-          {progress?.isRunning ? `Fetching... (${progress.fetched}/${progress.total})` : '🔄 Fetch Free Float Data'}
-        </button>
-        {progress && <span style={{ fontSize: 12, color: '#666' }}>Data: {progress.fetched}/{progress.total} emiten</span>}
+        {progress && <span style={{ fontSize: 12, color: '#666' }}>
+          {progress.isRunning
+            ? `⏳ Sedang mengambil data... (${progress.fetched}/${progress.total})`
+            : `📊 Data: ${progress.fetched}/${progress.total} emiten`}
+        </span>}
         <span style={{ flex: 1 }} />
         <input style={{ ...inp, width: 180 }} placeholder="Cari symbol/nama..." value={search}
           onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && loadData()} />
@@ -153,7 +150,7 @@ export default function FreeFloat() {
       </div>
       {data.length === 0 && !loading && (
         <p style={{ textAlign: 'center', color: '#999', padding: 24 }}>
-          Belum ada data. Klik "Fetch Free Float Data" untuk mulai mengambil data.
+          Belum ada data. Buka Dashboard dan klik "Start Free Float Fetch" untuk mengambil data.
         </p>
       )}
     </div>
