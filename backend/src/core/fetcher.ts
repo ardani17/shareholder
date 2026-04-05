@@ -30,9 +30,9 @@ export class Fetcher {
     this._isPaused = false;
 
     try {
-      // Step a: Check if emitens exist in DB. If not, fetch and insert.
+      // Step a: Check if emitens exist in DB. If not (or force refresh), fetch and insert.
       const progress = await getProgress(this._pool);
-      if (progress.total === 0) {
+      if (progress.total === 0 || forceRefresh) {
         console.log('Fetching emiten list...');
         const listResponse = await fetchEmitenList(this._apiKey, this._baseUrl);
         console.log(`Found ${listResponse.data.length} emitens. Inserting into database...`);
