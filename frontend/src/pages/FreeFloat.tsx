@@ -54,6 +54,9 @@ export default function FreeFloat() {
 
   useEffect(() => { loadData(); loadProgress(); }, []); // eslint-disable-line
 
+  // Auto-reload when sort/filter changes
+  useEffect(() => { loadData(); }, [sortBy, order, statusFilter]); // eslint-disable-line
+
   useEffect(() => {
     if (!progress?.isRunning) return;
     const iv = setInterval(() => { loadProgress(); loadData(); }, 10000);

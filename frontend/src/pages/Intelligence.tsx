@@ -65,6 +65,10 @@ export default function Intelligence() {
     else loadConcentrations();
   }, [tab]); // eslint-disable-line
 
+  // Auto-reload when sort changes
+  useEffect(() => { if (tab === 'leaderboard') loadLeaderboard(); }, [lbSort]); // eslint-disable-line
+  useEffect(() => { if (tab === 'concentration') loadConcentrations(); }, [concSort, concOrder]); // eslint-disable-line
+
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: 24, fontFamily: 'sans-serif' }}>
       <h1 style={{ marginBottom: 16 }}>Ownership Intelligence</h1>
