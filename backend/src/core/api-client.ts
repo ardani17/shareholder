@@ -38,7 +38,7 @@ export class ApiRateLimitError extends Error {
 const REQUEST_TIMEOUT_MS = 30_000;
 
 // IDX stock sector IDs (exclude non-stock sectors like Currencies, Commodities, etc.)
-const IDX_SECTOR_IDS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '50', '51'];
+const IDX_SECTOR_IDS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '50', '51', '89'];
 
 // --- API Client Functions ---
 
@@ -74,7 +74,7 @@ export async function fetchEmitenList(
       const companies = compBody?.data?.data ?? [];
 
       for (const c of companies) {
-        if (c.company_status === 'STATUS_ACTIVE' && c.type_company === 'Saham' && !seen.has(c.symbol)) {
+        if (c.type_company === 'Saham' && !seen.has(c.symbol)) {
           seen.add(c.symbol);
           allEmitens.push({ symbol: c.symbol, name: c.name });
         }
