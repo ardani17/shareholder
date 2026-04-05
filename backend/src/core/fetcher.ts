@@ -42,10 +42,11 @@ export class Fetcher {
       // Step b: Get emitens to process
       let emitensToProcess;
       if (forceRefresh) {
-        // Force refresh: process ALL emitens (overwrite existing data)
+        // Force refresh: reset all to pending, then process ALL
         const { getAll } = await import('../database/emiten.repository.js');
+        await this._pool.query("UPDATE emitens SET status = 'pending', fetched_at = NULL, error_message = NULL");
         emitensToProcess = await getAll(this._pool);
-        console.log(`Force refresh: processing all ${emitensToProcess.length} emitens...`);
+        console.log(`Force refresh: reset & processing all ${emitensToProcess.length} emitens...`);
       } else {
         // Normal: only pending/failed
         const pendingEmitens = await getByStatus(this._pool, 'pending');
