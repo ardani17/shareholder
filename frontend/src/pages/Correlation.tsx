@@ -136,6 +136,16 @@ export default function Correlation() {
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: 24, fontFamily: 'sans-serif' }}>
       <h1>Correlation Analysis</h1>
+      <div style={{ background: '#f5f5f5', borderRadius: 6, padding: 14, marginBottom: 16, fontSize: 13, color: '#555', lineHeight: 1.6 }}>
+        <p style={{ margin: '0 0 8px', fontWeight: 600, color: '#333' }}>Bagaimana cara kerjanya?</p>
+        <p style={{ margin: 0 }}>
+          Fitur ini mencari pemegang saham lain yang memiliki saham di perusahaan yang sama dengan pemegang saham yang Anda cari.
+          Misalnya, jika Anda mencari "GOVERNMENT OF NORWAY" yang memiliki saham di 24 perusahaan, sistem akan mencari siapa saja
+          pemegang saham lain yang juga memiliki saham di perusahaan-perusahaan tersebut.
+          Skor korelasi menunjukkan jumlah perusahaan yang dimiliki bersama — semakin tinggi skornya,
+          semakin banyak kesamaan portofolio antara dua pemegang saham. Klik nama untuk melihat daftar perusahaan yang dimiliki bersama.
+        </p>
+      </div>
 
       {/* Search Form */}
       <div style={sectionStyle}>
