@@ -4,19 +4,19 @@ import { Fetcher } from '../core/fetcher.js';
 export function createFetchRouter(fetcher: Fetcher): Router {
   const router = Router();
 
-  router.post('/start', (_req: Request, res: Response) => {
+  router.post('/start', (req: Request, res: Response) => {
     try {
+      const force = req.body?.force === true;
       const progress = fetcher.getProgress();
       progress.then((p) => {
         if (p.isRunning) {
           res.status(409).json({ message: 'Batch fetch already running' });
           return;
         }
-        // Fire and forget — don't await start()
-        fetcher.start().catch((err) => {
+        fetcher.start(force).catch((err) => {
           console.error('Batch fetch error:', err);
         });
-        res.status(200).json({ message: 'Batch fetch started' });
+        res.status(200).json({ message: force ? 'Force refresh started' : 'Batch fetch started' });
       }).catch((err) => {
         console.error('Error checking progress:', err);
         res.status(500).json({ message: 'Internal server error' });

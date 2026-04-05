@@ -27,6 +27,14 @@ export function startFetch() {
   return request<Record<string, unknown>>('/api/fetch/start', { method: 'POST' });
 }
 
+export function refreshFetch() {
+  return request<Record<string, unknown>>('/api/fetch/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ force: true }),
+  });
+}
+
 export function pauseFetch() {
   return request<Record<string, unknown>>('/api/fetch/pause', { method: 'POST' });
 }

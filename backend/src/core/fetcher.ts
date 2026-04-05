@@ -25,7 +25,7 @@ export class Fetcher {
     this._baseUrl = baseUrl;
   }
 
-  async start(): Promise<void> {
+  async start(forceRefresh = false): Promise<void> {
     this._isRunning = true;
     this._isPaused = false;
 
@@ -33,17 +33,26 @@ export class Fetcher {
       // Step a: Check if emitens exist in DB. If not, fetch and insert.
       const progress = await getProgress(this._pool);
       if (progress.total === 0) {
-        console.log('Fetching emiten list from API (sectors → subsectors → companies)...');
+        console.log('Fetching emiten list...');
         const listResponse = await fetchEmitenList(this._apiKey, this._baseUrl);
         console.log(`Found ${listResponse.data.length} emitens. Inserting into database...`);
         await insertEmitens(this._pool, listResponse.data);
       }
 
-      // Step b: Get all emitens with status 'pending' or 'failed'
-      const pendingEmitens = await getByStatus(this._pool, 'pending');
-      const failedEmitens = await getByStatus(this._pool, 'failed');
-      const emitensToProcess = [...pendingEmitens, ...failedEmitens];
-      console.log(`Processing ${emitensToProcess.length} emitens...`);
+      // Step b: Get emitens to process
+      let emitensToProcess;
+      if (forceRefresh) {
+        // Force refresh: process ALL emitens (overwrite existing data)
+        const { getAll } = await import('../database/emiten.repository.js');
+        emitensToProcess = await getAll(this._pool);
+        console.log(`Force refresh: processing all ${emitensToProcess.length} emitens...`);
+      } else {
+        // Normal: only pending/failed
+        const pendingEmitens = await getByStatus(this._pool, 'pending');
+        const failedEmitens = await getByStatus(this._pool, 'failed');
+        emitensToProcess = [...pendingEmitens, ...failedEmitens];
+        console.log(`Processing ${emitensToProcess.length} emitens (pending/failed)...`);
+      }
 
       // Step c: Process each emiten through FloodController
       let processed = 0;

@@ -71,7 +71,7 @@ export default function FreeFloat() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16, fontFamily: 'sans-serif' }}>
       <h1 style={{ color: '#b71c1c', marginBottom: 4 }}>Laporan Free Float Monitor</h1>
-      <p style={{ color: '#666', fontSize: 13, marginBottom: 16 }}>Data diambil dari API Datasaham.io — mirip format Laporan Bulanan Registrasi Kepemilikan Saham BEI</p>
+      <p style={{ color: '#666', fontSize: 13, marginBottom: 16 }}>Laporan Bulanan Registrasi Kepemilikan Saham</p>
 
       {/* Controls */}
       <div style={{ ...box, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

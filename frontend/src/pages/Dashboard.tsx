@@ -3,6 +3,7 @@ import {
   getStatus,
   getProgress,
   startFetch,
+  refreshFetch,
   pauseFetch,
   resumeFetch,
   getFloodConfig,
@@ -160,6 +161,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleRefreshAll = async () => {
+    try {
+      await refreshFetch();
+      setActionMsg('Force refresh started — semua data akan diperbarui');
+      fetchProgress();
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : 'Refresh failed');
+    }
+  };
+
   const handlePause = async () => {
     try {
       await pauseFetch();
@@ -296,6 +307,7 @@ export default function Dashboard() {
 
         <div style={{ marginTop: 8 }}>
           <button style={btnStyle} onClick={handleStart}>Start</button>
+          <button style={{ ...btnStyle, background: '#fff3e0' }} onClick={handleRefreshAll}>🔄 Refresh All</button>
           <button style={btnStyle} onClick={handlePause}>Pause</button>
           <button style={btnStyle} onClick={handleResume}>Resume</button>
         </div>
@@ -367,7 +379,7 @@ export default function Dashboard() {
       <div style={sectionStyle}>
         <h2>Free Float Data Fetch</h2>
         <p style={{ fontSize: 13, color: '#666', marginBottom: 12 }}>
-          Ambil data free float (% FF, jumlah saham FF, jumlah pemegang saham) dari API Datasaham untuk seluruh emiten.
+          Ambil data free float (% FF, jumlah saham FF, jumlah pemegang saham) untuk seluruh emiten.
         </p>
         {ffProgress && (
           <div style={{ marginBottom: 12 }}>
