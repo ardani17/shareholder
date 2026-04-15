@@ -88,6 +88,13 @@ export default function Dashboard() {
   });
   const [actionMsg, setActionMsg] = useState<string | null>(null);
 
+  // Activity log
+  const [logs, setLogs] = useState<Array<{ time: string; type: 'info' | 'error' | 'success'; msg: string }>>([]);
+  const addLog = useCallback((type: 'info' | 'error' | 'success', msg: string) => {
+    const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLogs((prev) => [{ time, type, msg }, ...prev].slice(0, 100));
+  }, []);
+
   // Free float
   const [ffProgress, setFfProgress] = useState<{ fetched: number; total: number; isRunning: boolean } | null>(null);
 
@@ -101,10 +108,12 @@ export default function Dashboard() {
       setStatus(data as StatusData);
       setStatusError(null);
     } catch (err) {
-      setStatusError(err instanceof Error ? err.message : 'Failed to fetch status');
+      const msg = err instanceof Error ? err.message : 'Failed to fetch status';
+      setStatusError(msg);
       setStatus(null);
+      addLog('error', `Backend status: ${msg}`);
     }
-  }, []);
+  }, [addLog]);
 
   const fetchProgress = useCallback(async () => {
     try {
@@ -112,10 +121,12 @@ export default function Dashboard() {
       setProgress(data);
       setProgressError(null);
     } catch (err) {
-      setProgressError(err instanceof Error ? err.message : 'Failed to fetch progress');
+      const msg = err instanceof Error ? err.message : 'Failed to fetch progress';
+      setProgressError(msg);
       setProgress(null);
+      addLog('error', `Fetch progress: ${msg}`);
     }
-  }, []);
+  }, [addLog]);
 
   const fetchFloodConfig = useCallback(async () => {
     try {
@@ -124,10 +135,12 @@ export default function Dashboard() {
       setConfigForm(data);
       setConfigError(null);
     } catch (err) {
-      setConfigError(err instanceof Error ? err.message : 'Failed to fetch config');
+      const msg = err instanceof Error ? err.message : 'Failed to fetch config';
+      setConfigError(msg);
       setFloodConfig(null);
+      addLog('error', `Flood config: ${msg}`);
     }
-  }, []);
+  }, [addLog]);
 
   // Initial load
   useEffect(() => {
@@ -155,9 +168,12 @@ export default function Dashboard() {
     try {
       await startFetch();
       setActionMsg('Fetch started');
+      addLog('success', 'Fetch started');
       fetchProgress();
     } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : 'Start failed');
+      const msg = err instanceof Error ? err.message : 'Start failed';
+      setActionMsg(msg);
+      addLog('error', `Start fetch: ${msg}`);
     }
   };
 
@@ -165,9 +181,12 @@ export default function Dashboard() {
     try {
       await refreshFetch();
       setActionMsg('Force refresh started — semua data akan diperbarui');
+      addLog('success', 'Force refresh started');
       fetchProgress();
     } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : 'Refresh failed');
+      const msg = err instanceof Error ? err.message : 'Refresh failed';
+      setActionMsg(msg);
+      addLog('error', `Refresh all: ${msg}`);
     }
   };
 
@@ -175,9 +194,12 @@ export default function Dashboard() {
     try {
       await pauseFetch();
       setActionMsg('Fetch paused');
+      addLog('info', 'Fetch paused');
       fetchProgress();
     } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : 'Pause failed');
+      const msg = err instanceof Error ? err.message : 'Pause failed';
+      setActionMsg(msg);
+      addLog('error', `Pause: ${msg}`);
     }
   };
 
@@ -185,9 +207,12 @@ export default function Dashboard() {
     try {
       await resumeFetch();
       setActionMsg('Fetch resumed');
+      addLog('info', 'Fetch resumed');
       fetchProgress();
     } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : 'Resume failed');
+      const msg = err instanceof Error ? err.message : 'Resume failed';
+      setActionMsg(msg);
+      addLog('error', `Resume: ${msg}`);
     }
   };
 
@@ -198,8 +223,11 @@ export default function Dashboard() {
       setFloodConfig(updated);
       setConfigForm(updated);
       setActionMsg('Config updated');
+      addLog('success', 'Flood config updated');
     } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : 'Config update failed');
+      const msg = err instanceof Error ? err.message : 'Config update failed';
+      setActionMsg(msg);
+      addLog('error', `Config update: ${msg}`);
     }
   };
 
@@ -207,9 +235,12 @@ export default function Dashboard() {
     try {
       await startFreeFloatFetch();
       setActionMsg('Free float fetch started');
+      addLog('success', 'Free float fetch started');
       fetchFfProgress();
     } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : 'Free float fetch failed');
+      const msg = err instanceof Error ? err.message : 'Free float fetch failed';
+      setActionMsg(msg);
+      addLog('error', `Free float fetch: ${msg}`);
     }
   };
 
@@ -243,7 +274,14 @@ export default function Dashboard() {
       <div style={{ filter: dashUnlocked ? 'none' : 'blur(8px)', pointerEvents: dashUnlocked ? 'auto' : 'none', userSelect: dashUnlocked ? 'auto' : 'none' }}>
 
       {actionMsg && (
-        <div style={{ padding: 8, marginBottom: 12, background: '#e8f5e9', borderRadius: 4 }}>
+        <div style={{
+          padding: 8,
+          marginBottom: 12,
+          background: actionMsg.startsWith('[') || actionMsg.includes('failed') || actionMsg.includes('Tidak bisa') ? '#ffebee' : '#e8f5e9',
+          color: actionMsg.startsWith('[') || actionMsg.includes('failed') || actionMsg.includes('Tidak bisa') ? '#c62828' : '#2e7d32',
+          borderRadius: 4,
+          fontSize: 13,
+        }}>
           {actionMsg}
         </div>
       )}
@@ -412,6 +450,34 @@ export default function Dashboard() {
         >
           {ffProgress?.isRunning ? 'Fetching...' : '🔄 Start Free Float Fetch'}
         </button>
+      </div>
+      {/* Activity Log */}
+      <div style={sectionStyle}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <h2 style={{ margin: 0 }}>Activity Log</h2>
+          {logs.length > 0 && (
+            <button style={{ ...btnStyle, fontSize: 12, padding: '4px 10px' }} onClick={() => setLogs([])}>Clear</button>
+          )}
+        </div>
+        {logs.length === 0 ? (
+          <p style={{ color: '#999', fontSize: 13 }}>Belum ada aktivitas.</p>
+        ) : (
+          <div style={{ maxHeight: 250, overflowY: 'auto', fontSize: 12, fontFamily: 'monospace', background: '#fafafa', borderRadius: 4, padding: 8 }}>
+            {logs.map((log, i) => (
+              <div key={i} style={{
+                padding: '3px 0',
+                borderBottom: '1px solid #eee',
+                color: log.type === 'error' ? '#c62828' : log.type === 'success' ? '#2e7d32' : '#555',
+              }}>
+                <span style={{ color: '#999', marginRight: 8 }}>{log.time}</span>
+                {log.type === 'error' && <span style={{ marginRight: 4 }}>❌</span>}
+                {log.type === 'success' && <span style={{ marginRight: 4 }}>✅</span>}
+                {log.type === 'info' && <span style={{ marginRight: 4 }}>ℹ️</span>}
+                {log.msg}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       </div>
     </div>

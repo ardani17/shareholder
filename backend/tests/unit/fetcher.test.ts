@@ -192,9 +192,9 @@ describe('Fetcher', () => {
     expect(progress.isPaused).toBe(false);
   });
 
-  it('should use default baseUrl when not provided', () => {
-    const fetcher = new Fetcher(pool, floodController, 'test-key');
-    // Just verify it constructs without error — the default URL is used internally
+  it('should require baseUrl parameter', () => {
+    const fetcher = new Fetcher(pool, floodController, 'test-key', 'https://data.vastara.id');
+    // Just verify it constructs without error
     expect(fetcher).toBeDefined();
   });
 });

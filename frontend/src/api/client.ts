@@ -1,7 +1,18 @@
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, options);
+  let res: Response;
+  try {
+    res = await fetch(url, options);
+  } catch (err) {
+    throw new Error(`Tidak bisa terhubung ke backend. Pastikan server berjalan.`);
+  }
   if (!res.ok) {
-    throw new Error(res.statusText);
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      if (body?.error) detail = body.error;
+      else if (body?.message) detail = body.message;
+    } catch { /* ignore parse error */ }
+    throw new Error(`[${res.status}] ${detail}`);
   }
   return res.json() as Promise<T>;
 }

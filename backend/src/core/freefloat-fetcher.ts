@@ -52,7 +52,7 @@ export class FreeFloatFetcher {
   private _baseUrl: string;
   private _isRunning = false;
 
-  constructor(pool: pg.Pool, fc: FloodController, apiKey: string, baseUrl = 'https://api.cloudnexify.com') {
+  constructor(pool: pg.Pool, fc: FloodController, apiKey: string, baseUrl: string) {
     this._pool = pool;
     this._fc = fc;
     this._apiKey = apiKey;

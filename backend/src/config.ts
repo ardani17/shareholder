@@ -8,6 +8,7 @@ if (!process.env.DATASAHAM_API_KEY) {
 
 export const config = {
   datasahamApiKey: process.env.DATASAHAM_API_KEY,
+  datasahamBaseUrl: process.env.DATASAHAM_BASE_URL || 'https://data.vastara.id',
   port: parseInt(process.env.PORT || '3001', 10),
   databaseUrl: process.env.DATABASE_URL || 'postgresql://localhost:5432/shareholder_mapping',
 } as const;

@@ -17,7 +17,7 @@ export class Fetcher {
     pool: pg.Pool,
     floodController: FloodController,
     apiKey: string,
-    baseUrl: string = 'https://api.cloudnexify.com',
+    baseUrl: string,
   ) {
     this._pool = pool;
     this._floodController = floodController;

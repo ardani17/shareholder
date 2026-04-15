@@ -43,8 +43,8 @@ async function main(): Promise<void> {
 
   // Initialize core modules
   const floodController = new FloodController();
-  const fetcher = new Fetcher(pool, floodController, config.datasahamApiKey);
-  const freeFloatFetcher = new FreeFloatFetcher(pool, new FloodController({ delayMs: 1500 }), config.datasahamApiKey);
+  const fetcher = new Fetcher(pool, floodController, config.datasahamApiKey, config.datasahamBaseUrl);
+  const freeFloatFetcher = new FreeFloatFetcher(pool, new FloodController({ delayMs: 1500 }), config.datasahamApiKey, config.datasahamBaseUrl);
 
   // Register routes
   app.use('/api', createStatusRouter(pool, fetcher, floodController));
