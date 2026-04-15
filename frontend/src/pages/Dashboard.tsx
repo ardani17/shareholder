@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getStatus,
   getProgress,
@@ -98,9 +98,29 @@ export default function Dashboard() {
   // Free float
   const [ffProgress, setFfProgress] = useState<{ fetched: number; total: number; isRunning: boolean } | null>(null);
 
+  // Refs to track previous progress for change detection
+  const prevProgress = useRef<ProgressData | null>(null);
+  const prevFfProgress = useRef<{ fetched: number; total: number; isRunning: boolean } | null>(null);
+
   const fetchFfProgress = useCallback(async () => {
-    try { setFfProgress(await getFreeFloatProgress()); } catch { /* ignore */ }
-  }, []);
+    try {
+      const data = await getFreeFloatProgress();
+      const prev = prevFfProgress.current;
+      if (prev && data.isRunning) {
+        if (data.fetched !== prev.fetched) {
+          addLog('info', `[Free Float] ${data.fetched}/${data.total} emiten diproses`);
+        }
+      }
+      if (prev?.isRunning && !data.isRunning && data.fetched > 0) {
+        addLog('success', `[Free Float] Selesai — ${data.fetched}/${data.total} emiten`);
+      }
+      prevFfProgress.current = data;
+      setFfProgress(data);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to fetch free float progress';
+      addLog('error', `[Free Float] ${msg}`);
+    }
+  }, [addLog]);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -118,13 +138,46 @@ export default function Dashboard() {
   const fetchProgress = useCallback(async () => {
     try {
       const data = await getProgress();
+      const prev = prevProgress.current;
+
+      if (prev && data.isRunning) {
+        // Log when success count changes
+        if (data.success !== prev.success || data.failed !== prev.failed) {
+          const parts: string[] = [];
+          parts.push(`✓${data.success}`);
+          if (data.failed > 0) parts.push(`✗${data.failed}`);
+          parts.push(`⏳${data.pending}`);
+          addLog(
+            data.failed > prev.failed ? 'error' : 'info',
+            `[Fetch] ${parts.join(' | ')} / ${data.total} total`
+          );
+        }
+      }
+
+      // Detect fetch completed
+      if (prev?.isRunning && !data.isRunning) {
+        if (data.failed > 0) {
+          addLog('error', `[Fetch] Selesai — ${data.success} sukses, ${data.failed} gagal dari ${data.total}`);
+        } else if (data.success > 0) {
+          addLog('success', `[Fetch] Selesai — ${data.success}/${data.total} sukses`);
+        } else {
+          addLog('info', `[Fetch] Berhenti`);
+        }
+      }
+
+      // Detect paused
+      if (data.isPaused && prev && !prev.isPaused) {
+        addLog('info', `[Fetch] Auto-paused (kemungkinan rate limit)`);
+      }
+
+      prevProgress.current = data;
       setProgress(data);
       setProgressError(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch progress';
       setProgressError(msg);
       setProgress(null);
-      addLog('error', `Fetch progress: ${msg}`);
+      addLog('error', `[Fetch] ${msg}`);
     }
   }, [addLog]);
 
