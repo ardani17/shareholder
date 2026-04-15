@@ -48,7 +48,7 @@ async function main(): Promise<void> {
 
   // Register routes
   app.use('/api', createStatusRouter(pool, fetcher, floodController));
-  app.use('/api/fetch', createFetchRouter(fetcher));
+  app.use('/api/fetch', createFetchRouter(fetcher, pool));
   app.use('/api/flood-control', createFloodConfigRouter(floodController));
   app.use('/api/shareholders', createShareholderRouter(pool));
   app.use('/api/shareholders', createCorrelationRouter(pool));

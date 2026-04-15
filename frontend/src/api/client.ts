@@ -54,6 +54,14 @@ export function resumeFetch() {
   return request<Record<string, unknown>>('/api/fetch/resume', { method: 'POST' });
 }
 
+export function getFailedEmitens(limit = 50) {
+  return request<{
+    data: Array<{ symbol: string; name: string; error_message: string | null; fetched_at: string | null }>;
+    summary: Array<{ error_message: string; cnt: string }>;
+    total: number;
+  }>(`/api/fetch/failed?limit=${limit}`);
+}
+
 // --- Flood Control Config ---
 
 export function getFloodConfig() {

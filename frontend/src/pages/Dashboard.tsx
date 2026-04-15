@@ -10,6 +10,7 @@ import {
   updateFloodConfig,
   startFreeFloatFetch,
   getFreeFloatProgress,
+  getFailedEmitens,
 } from '../api/client';
 
 interface StatusData {
@@ -101,6 +102,14 @@ export default function Dashboard() {
   // Refs to track previous progress for change detection
   const prevProgress = useRef<ProgressData | null>(null);
   const prevFfProgress = useRef<{ fetched: number; total: number; isRunning: boolean } | null>(null);
+
+  // Failed emitens
+  const [failedData, setFailedData] = useState<{
+    data: Array<{ symbol: string; name: string; error_message: string | null; fetched_at: string | null }>;
+    summary: Array<{ error_message: string; cnt: string }>;
+    total: number;
+  } | null>(null);
+  const [showFailed, setShowFailed] = useState(false);
 
   const fetchFfProgress = useCallback(async () => {
     try {
@@ -402,6 +411,49 @@ export default function Dashboard() {
           <button style={btnStyle} onClick={handlePause}>Pause</button>
           <button style={btnStyle} onClick={handleResume}>Resume</button>
         </div>
+
+        {/* Failed emitens detail */}
+        {progress && progress.failed > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <button
+              style={{ ...btnStyle, fontSize: 12, background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a' }}
+              onClick={async () => {
+                if (!showFailed) {
+                  try {
+                    const data = await getFailedEmitens(100);
+                    setFailedData(data);
+                  } catch { /* ignore */ }
+                }
+                setShowFailed(!showFailed);
+              }}
+            >
+              {showFailed ? '▼ Sembunyikan' : '▶ Lihat'} {progress.failed} emiten gagal
+            </button>
+            {showFailed && failedData && (
+              <div style={{ marginTop: 8 }}>
+                {failedData.summary.length > 0 && (
+                  <div style={{ marginBottom: 8, padding: 8, background: '#fff3e0', borderRadius: 4, fontSize: 12 }}>
+                    <strong>Ringkasan Error:</strong>
+                    {failedData.summary.map((s, i) => (
+                      <div key={i} style={{ marginTop: 4 }}>
+                        <span style={{ color: '#e65100' }}>{s.cnt}x</span>{' '}
+                        <span style={{ fontFamily: 'monospace' }}>{s.error_message || '(no message)'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ maxHeight: 200, overflowY: 'auto', fontSize: 11, fontFamily: 'monospace', background: '#fafafa', borderRadius: 4, padding: 8 }}>
+                  {failedData.data.map((e, i) => (
+                    <div key={i} style={{ padding: '2px 0', borderBottom: '1px solid #eee' }}>
+                      <span style={{ fontWeight: 'bold', color: '#c62828' }}>{e.symbol}</span>{' '}
+                      <span style={{ color: '#666' }}>{e.error_message || '-'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Flood Control Config */}

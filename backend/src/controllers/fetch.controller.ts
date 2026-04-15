@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { Fetcher } from '../core/fetcher.js';
+import pg from 'pg';
 
-export function createFetchRouter(fetcher: Fetcher): Router {
+export function createFetchRouter(fetcher: Fetcher, pool?: pg.Pool): Router {
   const router = Router();
 
   router.post('/start', (req: Request, res: Response) => {
@@ -53,6 +54,27 @@ export function createFetchRouter(fetcher: Fetcher): Router {
       res.status(200).json(progress);
     } catch (err) {
       console.error('Error in /progress:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  router.get('/failed', async (req: Request, res: Response) => {
+    if (!pool) {
+      res.status(501).json({ message: 'Not available' });
+      return;
+    }
+    try {
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+      const result = await pool.query(
+        `SELECT symbol, name, error_message, fetched_at FROM emitens WHERE status = 'failed' ORDER BY fetched_at DESC NULLS LAST LIMIT $1`,
+        [limit]
+      );
+      const summary = await pool.query(
+        `SELECT error_message, COUNT(*) as cnt FROM emitens WHERE status = 'failed' GROUP BY error_message ORDER BY cnt DESC LIMIT 10`
+      );
+      res.status(200).json({ data: result.rows, summary: summary.rows, total: result.rowCount });
+    } catch (err) {
+      console.error('Error in /failed:', err);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
